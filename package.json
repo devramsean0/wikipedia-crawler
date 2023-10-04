@@ -1,0 +1,24 @@
+{
+  "name": "web-crawler",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "repository": "https://github.com/devramsean0/web-crawler",
+  "author": "Sean Outram <outramsean0@gmail.com>",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@sapphire/ts-config": "^5.0.0",
+    "@types/node-fetch": "^2.6.6",
+    "prisma": "5.3.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@prisma/client": "5.3.1",
+    "cheerio": "^1.0.0-rc.12",
+    "node-fetch": "^3.3.2",
+    "robots-parser": "^3.0.1"
+  }
+}
