@@ -21,6 +21,7 @@
     "cheerio": "^1.0.0-rc.12",
     "node-cron": "^3.0.2",
     "node-fetch": "^3.3.2",
-    "robots-parser": "^3.0.1"
+    "robots-parser": "^3.0.1",
+    "winston": "^3.10.0"
   }
 }
