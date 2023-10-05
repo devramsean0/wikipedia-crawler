@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import { sleep } from "./lib/sleep.js";
 import { PrismaClient } from "@prisma/client";
 import { URLParser } from "./lib/urlParser.js";
+import cron from "node-cron";
 //import { updateDB } from "./lib/updateDB.js";
 
 // DB
@@ -10,12 +11,23 @@ const db = new PrismaClient();
 await db.$connect();
 
 // Robots.TXT Cache
-const robotsTXTCache: any = {};
+var robotsTXTCache: any = {};
 
 const pagesToVisit: string[] = ["https://wikipedia.org"];
 const pagesScraped: string[] = [];
-
+// Cron to manage resetting of robots.txt
+var scrape = true;
+cron.schedule('0 * * * *', () => {
+    console.log("Resetting Robots.txt cache")
+    scrape = false;
+    sleep(2000)
+    robotsTXTCache = {};
+    scrape = true;
+    console.log("Reset Robots.txt cache")
+})
+// Scraper script
 while (pagesToVisit.length >= 1) {
+    if (!scrape) continue;
     const url = pagesToVisit[0];
     if (URL.canParse(url)) {
         if (url.startsWith("/")) {
