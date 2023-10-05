@@ -26,6 +26,13 @@ cron.schedule('0 * * * *', () => {
     scrape = true;
     console.log("Reset Robots.txt cache")
 })
+cron.schedule('0 0 * * *', async () => {
+    console.log("Sending daily WebSocket")
+    const domainsCount = await db.domain.count();
+    const pagesCount = await db.page.count();
+    
+})
+var startTime = new Date().getTime();
 // Scraper script
 while (pagesToVisit.length >= 1) {
     if (!scrape) continue;
@@ -146,3 +153,5 @@ while (pagesToVisit.length >= 1) {
         continue;
     }
 }
+var endTime = new Date().getTime();
+console.log(`Took ${endTime - startTime}`)
