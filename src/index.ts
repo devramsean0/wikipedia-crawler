@@ -38,6 +38,17 @@ while (pagesToVisit.length >= 1) {
         } else {
             const URLParserClass = new URLParser(url);
             const baseURL = `${URLParserClass.protocool()}://${URLParserClass.host()}`
+            const dbRecord = await db.domain.upsert({
+                where: {
+                    name: baseURL
+                },
+                update: {},
+                create: {
+                    sleepDuration: 1000,
+                    name: baseURL
+                }
+            })
+            sleep(Number(dbRecord.sleepDuration))
             if (URLParserClass.protocool() === null) {
                 console.log("Skipping (Invalid protocool) :", url)
                 pagesToVisit.shift();
@@ -57,6 +68,19 @@ while (pagesToVisit.length >= 1) {
             }
             const robot = robotsParser(`${baseURL}/robots.txt`, robotsTXTCache[baseURL]);
             if (robot.isAllowed(url, "WikipediaCrawler")) {
+                const sleepDelay = robot.getCrawlDelay("WikipediaCrawler");
+                await db.domain.upsert({
+                    where: {
+                        name: baseURL
+                    },
+                    update: {
+                        sleepDuration: sleepDelay
+                    },
+                    create: {
+                        name: baseURL,
+                        sleepDuration: sleepDelay
+                    }
+                })
                 if (pagesScraped.includes(url)) {
                     pagesToVisit.shift();
                     continue;
@@ -79,6 +103,7 @@ while (pagesToVisit.length >= 1) {
                     console.log("Successfully scraped", url)
                     pagesToVisit.shift();
                     pagesScraped.push(url);
+                    const title = $("title").first().text();
                     const domain = await db.domain.upsert({
                         where: {
                             name: baseURL
@@ -96,9 +121,9 @@ while (pagesToVisit.length >= 1) {
                         create: {
                             url: url,
                             domainId: domain.id,
+                            title: title
                         },
                     })
-                    sleep(1000)
                 } catch {
                     console.log("Skipping (error when scraping)", url)
                     pagesToVisit.shift();
