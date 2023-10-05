@@ -17,9 +17,8 @@ model domain {
 }
 
 model page {
-  id       Int    @unique @default(autoincrement())
-  url      String @unique
-  domain   domain @relation(fields: [domainId], references: [id])
-  domainId Int
-  reachedBy String[]
+  id        Int      @unique @default(autoincrement())
+  url       String   @unique
+  domain    domain   @relation(fields: [domainId], references: [id])
+  domainId  Int
 }
