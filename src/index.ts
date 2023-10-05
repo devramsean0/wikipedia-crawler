@@ -4,6 +4,7 @@ import { sleep } from "./lib/sleep.js";
 import { PrismaClient } from "@prisma/client";
 import { URLParser } from "./lib/urlParser.js";
 import cron from "node-cron";
+import { customFetch } from "./lib/fetch.js";
 //import { updateDB } from "./lib/updateDB.js";
 
 // DB
@@ -45,7 +46,7 @@ while (pagesToVisit.length >= 1) {
             if (URLParserClass.protocool() === "https" || "http") {
             if (typeof(robotsTXTCache[baseURL]) == "undefined") {
                 try {
-                const robotsTXT = await fetch(`${baseURL}/robots.txt`);  
+                const robotsTXT = await customFetch(`${baseURL}/robots.txt`);  
                 const robotsTXTString = await robotsTXT.text();
                 robotsTXTCache[baseURL] = robotsTXTString;
                 } catch {
@@ -55,17 +56,13 @@ while (pagesToVisit.length >= 1) {
                 }
             }
             const robot = robotsParser(`${baseURL}/robots.txt`, robotsTXTCache[baseURL]);
-            if (robot.isAllowed(url)) {
-                if (pagesScraped.includes(url) || await db.page.count({
-                    where: {
-                        url: url
-                    }
-                }) == 1) {
+            if (robot.isAllowed(url, "WikipediaCrawler")) {
+                if (pagesScraped.includes(url)) {
                     pagesToVisit.shift();
                     continue;
                 }
                 try {
-                    const pageHTML = await fetch(url)
+                    const pageHTML = await customFetch(url)
                     const pageHTMLString = await pageHTML.text();
                     const $ = cheerio.load(pageHTMLString);
                     $("a").each((_index, element) => {
