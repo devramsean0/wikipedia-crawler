@@ -1,7 +1,7 @@
 import robotsParser from "robots-parser";
 import * as cheerio from "cheerio";
 import { sleep } from "./lib/sleep.js";
-import { PrismaClient } from "@prisma/client";
+import { page, unscrapedPage, PrismaClient } from "@prisma/client";
 import { URLParser } from "./lib/urlParser.js";
 import cron from "node-cron";
 import { customFetch } from "./lib/fetch.js";
@@ -16,6 +16,13 @@ var robotsTXTCache: any = {};
 
 const pagesToVisit: string[] = ["https://wikipedia.org"];
 const pagesScraped: string[] = [];
+// Setup these vars with historic data
+(await db.page.findMany()).map((page: page) => {
+    pagesScraped.push(page.url)
+});
+(await db.unscrapedPage.findMany()).map((page: unscrapedPage) => {
+    pagesToVisit.push(page.url)
+})
 // Cron to manage resetting of robots.txt
 var scrape = true;
 cron.schedule('0 * * * *', () => {
@@ -26,12 +33,12 @@ cron.schedule('0 * * * *', () => {
     scrape = true;
     console.log("Reset Robots.txt cache")
 })
-cron.schedule('0 0 * * *', async () => {
+/* cron.schedule('0 0 * * *', async () => {
     console.log("Sending daily WebSocket")
-    const domainsCount = await db.domain.count();
-    const pagesCount = await db.page.count();
+    const _domainsCount = await db.domain.count();
+    const _pagesCount = await db.page.count();
     
-})
+}) */
 var startTime = new Date().getTime();
 // Scraper script
 while (pagesToVisit.length >= 1) {
@@ -106,10 +113,21 @@ while (pagesToVisit.length >= 1) {
                             newURL = `${baseURL}${relativeURL}`
                         }
                         pagesToVisit.push(newURL)
+                        const unscrapedPageDBEntry = db.unscrapedPage.create({
+                            data: {
+                                url: newURL
+                            }
+                        })
+                        Promise.resolve(unscrapedPageDBEntry);
                     });
                     console.log("Successfully scraped", url)
                     pagesToVisit.shift();
                     pagesScraped.push(url);
+                    await db.unscrapedPage.deleteMany({
+                        where: {
+                            url: url
+                        }
+                    })
                     const title = $("title").first().text();
                     const domain = await db.domain.upsert({
                         where: {
@@ -131,25 +149,45 @@ while (pagesToVisit.length >= 1) {
                             title: title
                         },
                     })
-                } catch {
-                    console.log("Skipping (error when scraping)", url)
+                } catch(e) {
+                    console.log("Skipping (error when scraping)", url, e)
                     pagesToVisit.shift();
+                    await db.unscrapedPage.deleteMany({
+                        where: {
+                            url: url
+                        }
+                    })
                     continue;
                 }
             } else {
                 console.log("Skipping (not allowed): ", url)
                 pagesToVisit.shift();
+                await db.unscrapedPage.deleteMany({
+                    where: {
+                        url: url
+                    }
+                })
                 continue;
             }
         } else {
             console.log("Skipping (not http or https): ", url)
             pagesToVisit.shift();
+            await db.unscrapedPage.deleteMany({
+                where: {
+                    url: url
+                }
+            })
             continue;
         }
         }
     } else {
         console.log("Skipping (can't parse URL): ", url)
         pagesToVisit.shift();
+        await db.unscrapedPage.deleteMany({
+            where: {
+                url: url
+            }
+        })
         continue;
     }
 }

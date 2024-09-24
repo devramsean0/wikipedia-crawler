@@ -25,3 +25,8 @@ model page {
   domainId  Int
   title     String   @default("No Title")
 }
+
+model unscrapedPage {
+  id  Int @unique @default(autoincrement())
+  url String
+}
