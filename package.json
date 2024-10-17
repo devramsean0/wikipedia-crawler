@@ -13,11 +13,11 @@
     "@sapphire/ts-config": "^5.0.0",
     "@types/node-cron": "^3.0.9",
     "@types/node-fetch": "^2.6.6",
-    "prisma": "5.4.1",
+    "prisma": "5.21.1",
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@prisma/client": "5.4.1",
+    "@prisma/client": "5.21.1",
     "cheerio": "^1.0.0-rc.12",
     "node-cron": "^3.0.2",
     "node-fetch": "^3.3.2",
